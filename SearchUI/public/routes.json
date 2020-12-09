@@ -27,7 +27,8 @@
       {
         "route": "/home",
         "serve": "/",
-        "statusCode": 301
+        "statusCode": 301,
+        "allowedRoles": ["authenticated"] 
       },
       { 
         "route": "/search", 
@@ -68,7 +69,8 @@
       {
         "route": "/*",
         "serve": "/",
-        "statusCode": 200
+        "statusCode": 200,
+        "allowedRoles": ["authenticated"] 
       }
     ],
     "platformErrorOverrides": [
