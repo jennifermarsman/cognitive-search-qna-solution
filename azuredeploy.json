@@ -41,11 +41,42 @@
             "metadata": {
                 "description": "Storage Account type"
             }
+        },
+        "staticWebAppLocation": {
+            "type": "string",
+            "defaultValue": "West US 2",
+            "allowedValues": [
+                "Central US",
+                "East US 2",
+                "East Asia",
+                "West Europe",
+                "West US 2"
+            ],
+            "metadata": {
+                "description": "Location for the Azure Static Web App"
+            }
+        },
+        "repoURL": {
+            "type": "string",
+            "metadata": {
+                "description": "The URL of the GitHub repo you just created"
+            }
+        },
+        "branch": {
+            "type": "string",
+            "defaultValue": "main",
+            "metadata": {
+                "description": "The URL of the repo you just created"
+            }
+        },
+        "repositoryToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Your GitHub personal access token (https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token)"
+            }
         }
     },
     "variables": {
-        "repoURL": "https://github.com/jennifermarsman/cognitive-search-qna-solution",
-        "branch": "main",
         "functionProject": "CustomSkillForDataIngestion\\QnAIntegrationCustomSkill\\QnAIntegrationCustomSkill.csproj",
         "qnaServiceName": "[concat(parameters('resourcePrefix'), '-qna-', uniqueString(resourceGroup().id, deployment().name))]",
         "searchServiceName": "[concat(parameters('resourcePrefix'), '-search-service-', uniqueString(resourceGroup().id, deployment().name))]",
@@ -53,7 +84,8 @@
         "qnaAppServiceName": "[concat(parameters('resourcePrefix'), '-site-', uniqueString(resourceGroup().id, deployment().name))]",
         "storageAccountName": "[concat(parameters('resourcePrefix'), 'storage', uniqueString(resourceGroup().id, deployment().name))]",
         "functionAppName": "[concat(parameters('resourcePrefix'), '-function-app-', uniqueString(resourceGroup().id, deployment().name))]",
-        "cognitiveServicesAllInOneName": "[concat(parameters('resourcePrefix'), '-cogsvc-', uniqueString(resourceGroup().id, deployment().name))]"
+        "cognitiveServicesAllInOneName": "[concat(parameters('resourcePrefix'), '-cogsvc-', uniqueString(resourceGroup().id, deployment().name))]",
+        "staticWebsiteName": "[concat(parameters('resourcePrefix'), '-static-web-', uniqueString(resourceGroup().id, deployment().name))]"
     },
     "resources": [
         {
@@ -241,8 +273,8 @@
                         "[resourceId('Microsoft.Web/Sites', variables('functionAppName'))]"
                     ],
                     "properties": {
-                        "RepoUrl": "[variables('repoURL')]",
-                        "branch": "[variables('branch')]",
+                        "RepoUrl": "[parameters('repoURL')]",
+                        "branch": "[parameters('branch')]",
                         "project": "[variables('functionProject')]",
                         "IsManualIntegration": true
                     }
@@ -261,44 +293,91 @@
             "properties": {}
         },
         {
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2015-01-01",
-            "name": "appsettings",
-            "dependsOn": [
-                "[resourceId('Microsoft.CognitiveServices/accounts', variables('cognitiveServicesAllInOneName'))]",
-                "[resourceId('Microsoft.Web/Sites/sourcecontrols', variables('functionAppName'), 'web')]"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[concat('https://',variables('functionAppName'),'.azurewebsites.net/api/init-kb?code=',listkeys(concat(resourceId('Microsoft.Web/sites', variables('functionAppName')), '/host/default/'),'2019-08-01').functionKeys.default)]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "functionCode": {
-                        "value": "[listkeys(concat(resourceId('Microsoft.Web/sites', variables('functionAppName')), '/host/default/'),'2019-08-01').functionKeys.default]"
-                    },
-                    "functionAppName": {
-                        "value": "[variables('functionAppName')]"
-                    },
-                    "storageConnectionString": {
-                        "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').keys[0].value, ';')]"
-                    },
-                    "functionProject": {
-                        "value": "[variables('functionProject')]"
-                    },
-                    "searchServiceName": {
-                        "value": "[variables('searchServiceName')]"
-                    },
-                    "qnaServiceName": {
-                        "value": "[variables('qnaServiceName')]"
-                    },
-                    "cogServicesKey": {
-                        "value": "[listkeys(resourceId('Microsoft.CognitiveServices/accounts', variables('cognitiveServicesAllInOneName')), '2017-04-18').key1]"
-                    }
-                }
-            }
-        }
+            "apiVersion": "2019-12-01-preview",
+            "name": "[variables('staticWebsiteName')]",
+            "type": "Microsoft.Web/staticSites",
+            "location": "[parameters('staticWebAppLocation')]",
+            "properties": {
+                "repositoryUrl": "[parameters('repoURL')]",
+                "branch": "[parameters('branch')]",
+                "repositoryToken": "[parameters('repositoryToken')]",
+                "buildProperties": {
+                    "appLocation": "SearchUI",
+                    "apiLocation": "SearchUI/api",
+                    "appArtifactLocation": "build"
+                }
+            },
+            "sku": {
+                "Tier": "Free",
+                "Name": "Free"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
+                "[resourceId('Microsoft.Search/searchServices', variables('searchServiceName'))]"
+            ],
+            "resources": [
+                {
+                    "apiVersion": "2019-12-01-preview",
+                    "name": "appsettings",
+                    "type": "config",
+                    "location": "[resourceGroup().location]",
+                    "properties": {
+                        "QnAMakerEndpoint": "[concat('https://',variables('qnaAppServiceName'),'.azurewebsites.net')]",
+                        "QnAMakerKey": "",
+                        "QnAMakerKnowledgeBaseID": "",
+                        "SearchApiKey": "[listAdminKeys(resourceId('Microsoft.Search/searchServices', variables('searchServiceName')), '2020-08-01').primaryKey]",
+                        "SearchFacets": "keyPhrases*,fileType",
+                        "SearchIndexName": "qna-idx",
+                        "SearchServiceName": "[variables('searchServiceName')]",
+                        "StorageAccountKey": "[listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').keys[0].value]",
+                        "StorageAccountName": "[variables('storageAccountName')]",
+                        "StorageContainerName": "qna-container"
+                    },
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/staticSites', variables('staticWebsiteName'))]"
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2015-01-01",
+            "name": "appsettings",
+            "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', variables('cognitiveServicesAllInOneName'))]",
+                "[resourceId('Microsoft.Web/Sites/sourcecontrols', variables('functionAppName'), 'web')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat('https://',variables('functionAppName'),'.azurewebsites.net/api/init-kb?code=',listkeys(concat(resourceId('Microsoft.Web/sites', variables('functionAppName')), '/host/default/'),'2019-08-01').functionKeys.default)]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "functionCode": {
+                        "value": "[listkeys(concat(resourceId('Microsoft.Web/sites', variables('functionAppName')), '/host/default/'),'2019-08-01').functionKeys.default]"
+                    },
+                    "functionAppName": {
+                        "value": "[variables('functionAppName')]"
+                    },
+                    "storageConnectionString": {
+                        "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').keys[0].value, ';')]"
+                    },
+                    "functionProject": {
+                        "value": "[variables('functionProject')]"
+                    },
+                    "searchServiceName": {
+                        "value": "[variables('searchServiceName')]"
+                    },
+                    "qnaServiceName": {
+                        "value": "[variables('qnaServiceName')]"
+                    },
+                    "cogServicesKey": {
+                        "value": "[listkeys(resourceId('Microsoft.CognitiveServices/accounts', variables('cognitiveServicesAllInOneName')), '2017-04-18').key1]"
+                    }
+                }
+            }
+        }
     ],
     "outputs": {
         "Search Service Name": {

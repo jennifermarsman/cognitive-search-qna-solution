@@ -65,7 +65,8 @@
     "platformErrorOverrides": [
       {
         "errorType": "Unauthenticated",
-        "serve": "/login"
+        "serve": "/login",
+        "statusCode": 302
       },
       {
         "errorType": "NotFound",
