@@ -147,7 +147,9 @@ namespace AzureCognitiveSearch.QnAIntegrationCustomSkill
                     new SearchField("metadata_storage_path", SearchFieldDataType.String) { IsSearchable = true, IsSortable = false, IsFilterable = false, IsFacetable = false },
                     new SearchField("id", SearchFieldDataType.String) { IsKey = true, IsSearchable = true, IsSortable = false, IsFilterable = false, IsFacetable = false },
                     new SearchField("metadata_storage_name", SearchFieldDataType.String) { IsSearchable = true, IsSortable = false, IsFilterable = false, IsFacetable = false },
-                    new SearchField("status", SearchFieldDataType.String) { IsSearchable = false, IsSortable = false, IsFilterable = false, IsFacetable = false }
+                    new SearchField("status", SearchFieldDataType.String) { IsSearchable = false, IsSortable = false, IsFilterable = false, IsFacetable = false },
+                    new SearchField("fileType", SearchFieldDataType.String) { IsSearchable = true, IsSortable = false, IsFilterable = true, IsFacetable = true },
+                    new SearchField("keyPhrases", SearchFieldDataType.Collection(SearchFieldDataType.String)) { IsSearchable = true, IsSortable = false, IsFilterable = true, IsFacetable = true }
                 }
                 };
 
