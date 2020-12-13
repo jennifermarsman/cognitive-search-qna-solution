@@ -24,10 +24,10 @@
     "styled-components": "^5.2.0"
   },
   "scripts": {
-    "start": "node react-scripts start",
-    "build": "node react-scripts build",
-    "test": "node react-scripts test",
-    "eject": "node react-scripts eject"
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
   },
   "proxy": "http://localhost:7071",
   "eslintConfig": {
