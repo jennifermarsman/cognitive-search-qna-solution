@@ -88,14 +88,14 @@ goto :EOF
 :Deployment
 echo Handling node.js deployment.
 
+:: 4. Select node version
+call :SelectNodeVersion
+
 :: 1. Installing npm packages
 echo INSTALLING NPM PACKAGES
-IF EXIST "%DEPLOYMENT_TARGET%\package.json" (
-  pushd "%DEPLOYMENT_TARGET%"
-  call :ExecuteCmd !NPM_CMD! install --production
-  IF !ERRORLEVEL! NEQ 0 goto error
-  popd
-)
+call :ExecuteCmd !NPM_CMD! install --production
+IF !ERRORLEVEL! NEQ 0 goto error
+
 
 :: 2. Build the react site
 echo BUILDING REACT SITE
@@ -109,8 +109,7 @@ IF /I "%IN_PLACE_DEPLOYMENT%" NEQ "1" (
   IF !ERRORLEVEL! NEQ 0 goto error
 )
 
-:: 4. Select node version
-call :SelectNodeVersion
+
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 goto end
