@@ -3,10 +3,14 @@
 IF "%SITE_FLAVOR%" == "react" (
   deploy.react.cmd
 ) ELSE (
-  IF "%SITE_FLAVOR%" == "functions" (
-    deploy.functions.cmd
+  IF "%SITE_FLAVOR%" == "nodefunctions" (
+    deploy.nodefunctions.cmd
   ) ELSE (
-    echo You have to set SITE_FLAVOR setting to either "react" or "functions"
-    exit /b 1
+    IF "%SITE_FLAVOR%" == "dotnetfunctions" (
+    deploy.dotnetfunctions.cmd
+    ) ELSE (
+      echo You have to set SITE_FLAVOR setting to either "react" or "nodefunctions" or "dotnetfunctions"
+      exit /b 1
+    )
   )
 )
