@@ -88,27 +88,34 @@ goto :EOF
 :Deployment
 echo Handling node.js deployment.
 
-:: 4. Select node version
 call :SelectNodeVersion
 
-:: 1. Installing npm packages
-echo INSTALLING NPM PACKAGES
-call :ExecuteCmd !NPM_CMD! install --production
-IF !ERRORLEVEL! NEQ 0 goto error
+SET WEB_CONFIG=azure/web.config
+SET BUILD_DIR=build
 
-
-:: 2. Build the react site
-echo BUILDING REACT SITE
-call :ExecuteCmd !NPM_CMD! run build
-IF !ERRORLEVEL! NEQ 0 goto error
-
-:: 3. KuduSync
-echo STARTING KUDO SYNC
+:: 1. Build & KuduSync
 IF /I "%IN_PLACE_DEPLOYMENT%" NEQ "1" (
-  call :ExecuteCmd "%KUDU_SYNC_CMD%" -v 50 -f "%DEPLOYMENT_SOURCE%\SearchUI\build" -t "%DEPLOYMENT_TARGET%" -n "%NEXT_MANIFEST_PATH%" -p "%PREVIOUS_MANIFEST_PATH%" -i ".git;.hg;.deployment;deploy.cmd"
+  pushd "%DEPLOYMENT_SOURCE%\SearchUI"
+
+  echo INSTALLING AND BUILDING APP
+  ::if you've want to clean npm cache uncomment following two lines
+  ::call :ExecuteCmd !NPM_CMD! cache clean --force
+  ::rm -rf node_modules
+  call :ExecuteCmd !NPM_CMD! config set scripts-prepend-node-path true
+
+  call :ExecuteCmd !NPM_CMD! install
+  IF !ERRORLEVEL! NEQ 0 goto error
+
+  call :ExecuteCmd !NPM_CMD! run build
+  IF !ERRORLEVEL! NEQ 0 goto error
+
+  cp %WEB_CONFIG% %BUILD_DIR%
+
+  popd
+
+  call :ExecuteCmd "%KUDU_SYNC_CMD%" -v 50 -f "%DEPLOYMENT_SOURCE%\SearchUI\%BUILD_DIR%" -t "%DEPLOYMENT_TARGET%" -n "%NEXT_MANIFEST_PATH%" -p "%PREVIOUS_MANIFEST_PATH%" -i ".git;.hg;.deployment;deploy.cmd"
   IF !ERRORLEVEL! NEQ 0 goto error
 )
-
 
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
