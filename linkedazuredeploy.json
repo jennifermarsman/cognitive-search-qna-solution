@@ -38,9 +38,7 @@
                     "apiVersion": "2018-11-01",
                     "name": "appsettings",
                     "type": "config",
-                    "dependsOn": [
-                        "SharedServicePlanTemplate"
-                    ],
+                    "dependsOn": [],
                     "properties": {
                         "PROJECT": "[parameters('reactProject')]",
                         "WEBSITE_NODE_DEFAULT_VERSION": "10.15.3",
