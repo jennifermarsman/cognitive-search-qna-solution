@@ -54,7 +54,7 @@ IF NOT DEFINED KUDU_SYNC_CMD (
 echo Handling function App deployment with Msbuild16.
 
 :: 1. Restore, Build and publish
-call :ExecuteCmd "%MSBUILD_16_DIR%\MSBuild.exe" /restore "%DEPLOYMENT_SOURCE%\QnA\QnAMaker\QnAMaker.csproj" /p:DeployOnBuild=true /p:configuration=Release /p:publishurl="%DEPLOYMENT_TEMP%" %SCM_BUILD_ARGS%
+call :ExecuteCmd "%MSBUILD_16_DIR%\MSBuild.exe" /restore "%DEPLOYMENT_SOURCE%\CustomSkillForDataIngestion\QnAIntegrationCustomSkill\QnAIntegrationCustomSkill.csproj" /p:DeployOnBuild=true /p:configuration=Release /p:publishurl="%DEPLOYMENT_TEMP%" %SCM_BUILD_ARGS%
 IF !ERRORLEVEL! NEQ 0 goto error
 
 :: 2. KuduSync

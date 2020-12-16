@@ -65,9 +65,10 @@
         }
     },
     "variables": {
-        "repoURL": "https://github.com/jennifermarsman/cognitive-search-qna-solution",
-        "repoDirectory": "jennifermarsman/cognitive-search-qna-solution/",
+        "repoURL": "https://github.com/dereklegenzoff/cognitive-search-qna-solution",
+        "repoDirectory": "dereklegenzoff/cognitive-search-qna-solution/",
         "branch": "main",
+        "reactProject": "SearchUI",
         "functionProject": "CustomSkillForDataIngestion\\QnAIntegrationCustomSkill\\QnAIntegrationCustomSkill.csproj",
         "qnaServiceName": "[concat(parameters('resourcePrefix'), '-qna-', uniqueString(resourceGroup().id, deployment().name))]",
         "searchServiceName": "[concat(parameters('resourcePrefix'), '-search-service-', uniqueString(resourceGroup().id, deployment().name))]",
@@ -76,7 +77,8 @@
         "storageAccountName": "[concat(parameters('resourcePrefix'), 'storage', uniqueString(resourceGroup().id, deployment().name))]",
         "functionAppName": "[concat(parameters('resourcePrefix'), '-function-app-', uniqueString(resourceGroup().id, deployment().name))]",
         "cognitiveServicesAllInOneName": "[concat(parameters('resourcePrefix'), '-cogsvc-allinone-', uniqueString(resourceGroup().id, deployment().name))]",
-        "appInsightsName": "[concat(parameters('resourcePrefix'), '-insights-', uniqueString(resourceGroup().id, deployment().name))]"
+        "appInsightsName": "[concat(parameters('resourcePrefix'), '-insights-', uniqueString(resourceGroup().id, deployment().name))]",
+        "siteName": "[concat(parameters('resourcePrefix'), '-ui-', uniqueString(resourceGroup().id, deployment().name))]"
     },
     "resources": [
         {
@@ -280,6 +282,10 @@
                         {
                             "name": "CogServicesKey",
                             "value": "[listkeys(resourceId('Microsoft.CognitiveServices/accounts', variables('cognitiveServicesAllInOneName')), '2017-04-18').key1]"
+                        },
+                        {
+                            "name": "SITE_FLAVOR",
+                            "value": "dotnetfunctions"
                         }
                     ]
                 }
@@ -311,6 +317,52 @@
             "kind": "CognitiveServices",
             "location": "[resourceGroup().location]",
             "properties": {}
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2020-06-01",
+            "name": "[variables('siteName')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]"
+            ],
+            "properties": {
+                "serverFarmId": "[variables('hostingPlanName')]"
+
+            },
+            "resources": [
+                {
+                    "apiVersion": "2018-11-01",
+                    "name": "appsettings",
+                    "type": "config",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/Sites', variables('siteName'))]",
+                        "[resourceId('Microsoft.Web/Sites', variables('functionAppName'))]"
+                    ],
+                    "properties": {
+                        "PROJECT": "[variables('reactProject')]",
+                        "WEBSITE_NODE_DEFAULT_VERSION": "10.15.3",
+                        "REACT_APP_FUNCTION_URL": "[concat('https://',variables('functionAppName'),'.azurewebsites.net')]",
+                        "REACT_APP_FUNCTION_CODE": "[listkeys(concat(resourceId('Microsoft.Web/sites', variables('functionAppName')), '/host/default/'),'2019-08-01').functionKeys.default]",
+                        "SITE_FLAVOR": "react"
+                    }
+                },
+                {
+                    "type": "sourcecontrols",
+                    "apiVersion": "2020-06-01",
+                    "name": "web",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/sites', variables('siteName'))]",
+                        "[resourceId('Microsoft.Web/Sites/config', variables('siteName'), 'appsettings')]"
+                    ],
+                    "properties": {
+                        "repoUrl": "[variables('repoURL')]",
+                        "branch": "[variables('branch')]",
+                        "isManualIntegration": true
+                    }
+                }
+            ]
         },
         {
             "type": "Microsoft.Resources/deployments",
