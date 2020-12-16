@@ -50,7 +50,8 @@ export default function SearchBar(props) {
             if (q === '') {
                 setSuggestions([]);
             } else {
-                axios.post( '/api/suggest', body)
+                const url = process.env.REACT_APP_FUNCTION_URL + '/api/suggest?code=' + process.env.REACT_APP_FUNCTION_CODE;
+                axios.post( url, body)
                 .then( response => {
                     setSuggestions(response.data.suggestions);
                 } )

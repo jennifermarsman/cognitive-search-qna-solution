@@ -15,5 +15,8 @@
     "StorageAccountName": "",
     "StorageAccountKey": "",
     "StorageContainerName": ""
+  },
+  "Host": {
+      "CORS": "*"
   }
 }

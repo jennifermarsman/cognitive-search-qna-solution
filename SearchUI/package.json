@@ -2,7 +2,7 @@
   "name": "sample",
   "version": "0.1.0",
   "private": true,
-    "engines": {
+  "engines": {
     "node": ">=10"
   },
   "dependencies": {
@@ -44,5 +44,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "dotenv": "^8.2.0"
   }
 }

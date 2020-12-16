@@ -40,7 +40,8 @@ export default function Search() {
       getAnswer: currentPage === 1 ? true : false 
     };
 
-    axios.post('/api/search', body)
+    const url = process.env.REACT_APP_FUNCTION_URL + '/api/search?code=' + process.env.REACT_APP_FUNCTION_CODE;
+    axios.post(url, body)
       .then(response => {
         setResults(response.data.results);
         setFacets(response.data.facets);
