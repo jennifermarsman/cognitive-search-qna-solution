@@ -29,8 +29,7 @@
             "name": "[parameters('siteName')]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "[resourceId('Microsoft.Web/serverfarms', parameters('hostingPlanName'))]",
-                "[resourceId('Microsoft.Web/Sites', parameters('functionAppName'))]"
+
             ],
             "properties": {
                 "serverFarmId": "[parameters('hostingPlanName')]"
@@ -42,8 +41,7 @@
                     "name": "appsettings",
                     "type": "config",
                     "dependsOn": [
-                        "[resourceId('Microsoft.Web/Sites', parameters('siteName'))]",
-                        "[resourceId('Microsoft.Web/Sites', parameters('functionAppName'))]"
+                        "SharedServicePlanTemplate"
                     ],
                     "properties": {
                         "PROJECT": "[parameters('reactProject')]",
