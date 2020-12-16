@@ -20,10 +20,10 @@ namespace QnAIntegrationCustomSkill
 {
     public static class Suggest
     {
-        private static string searchApiKey = Environment.GetEnvironmentVariable("SearchApiKey", EnvironmentVariableTarget.Process);
+        private static string searchApiKey = Environment.GetEnvironmentVariable("SearchServiceApiKey", EnvironmentVariableTarget.Process);
         private static string searchServiceName = Environment.GetEnvironmentVariable("SearchServiceName", EnvironmentVariableTarget.Process);
-        //private static string searchIndexName = Constants.indexName;
-        private static string searchIndexName = "qna-index";
+        private static string searchIndexName = Constants.indexName;
+        //private static string searchIndexName = "qna-index";
 
         // Create a SearchIndexClient to send create/delete index commands
         private static Uri serviceEndpoint = new Uri($"https://{searchServiceName}.search.windows.net/");

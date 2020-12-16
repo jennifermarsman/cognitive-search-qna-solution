@@ -234,6 +234,11 @@
                 "siteConfig": {
                     "enabled": true,
                     "alwaysOn": true,
+                    "cors": {
+                        "allowedOrigins": [
+                            "*"
+                        ]
+                    },
                     "appSettings": [
                         {
                             "name": "AzureWebJobsStorage",
@@ -282,6 +287,18 @@
                         {
                             "name": "CogServicesKey",
                             "value": "[listkeys(resourceId('Microsoft.CognitiveServices/accounts', variables('cognitiveServicesAllInOneName')), '2017-04-18').key1]"
+                        },
+                        {
+                            "name": "StorageAccountName",
+                            "value": "[variables('storageAccountName')]"
+                        },
+                        {
+                            "name": "StorageAccountKey",
+                            "value": "[listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').keys[0].value]"
+                        },
+                        {
+                            "name": "QnAMakerEndpoint",
+                            "value": "[concat('https://', variables('qnaAppServiceName'), '.azurewebsites.net')]"
                         },
                         {
                             "name": "SITE_FLAVOR",
