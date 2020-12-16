@@ -38,7 +38,10 @@
                     "apiVersion": "2018-11-01",
                     "name": "appsettings",
                     "type": "config",
-                    "dependsOn": [],
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/Sites', parameters('siteName'))]",
+                        "[resourceId('Microsoft.Web/Sites', parameters('functionAppName'))]"
+                    ],
                     "properties": {
                         "PROJECT": "[parameters('reactProject')]",
                         "WEBSITE_NODE_DEFAULT_VERSION": "10.15.3",
