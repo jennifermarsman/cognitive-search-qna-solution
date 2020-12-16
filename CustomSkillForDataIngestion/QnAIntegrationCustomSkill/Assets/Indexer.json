@@ -8,7 +8,7 @@
     },
     "disabled": false,
     "parameters": {
-        "batchSize": 10,
+        "batchSize": 50,
         "maxFailedItems": -1,
         "maxFailedItemsPerBatch": -1,
         "configuration": {
