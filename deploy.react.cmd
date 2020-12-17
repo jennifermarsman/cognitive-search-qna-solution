@@ -91,7 +91,7 @@ echo Handling node.js deployment.
 call :SelectNodeVersion
 
 ::echo SETTING VARIABLES
-SET WEB_CONFIG=azure\web.config
+SET WEB_CONFIG=web.config
 SET BUILD_DIR=build
 
 :: 1. Build & KuduSync
@@ -113,7 +113,7 @@ IF /I "%IN_PLACE_DEPLOYMENT%" NEQ "1" (
   call :ExecuteCmd !NPM_CMD! run build
   IF !ERRORLEVEL! NEQ 0 goto error
 
-  ::cp %WEB_CONFIG% %BUILD_DIR%
+  cp %WEB_CONFIG% %BUILD_DIR%
 
   popd
 
