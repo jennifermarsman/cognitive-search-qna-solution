@@ -121,14 +121,34 @@ namespace QnAIntegrationCustomSkill
                 IncludeTotalCount = true,
             };
 
+            options.Facets.Add("keyPhrases");
+            options.Facets.Add("fileType");
+
             options.HighlightFields.Add("content");
 
             var response = await searchClient.SearchAsync<SearchDocument>(q, options);
+
+            Dictionary<string, IList<FacetValue>> facets = new Dictionary<string, IList<FacetValue>>();
+
+            foreach (KeyValuePair<string, IList<FacetResult>> facet in response.Value.Facets)
+            {
+                //KeyValuePair<string, IList<FacetValue>> f = new KeyValuePair<string, IList<FacetValue>>(facet.Key, new List<FacetValue>());
+
+                var values = new List<FacetValue>();
+                foreach (FacetResult result in facet.Value)
+                {
+                    FacetValue value = new FacetValue() { count = result.Count, value = result.Value.ToString() };
+                    values.Add(value);
+                }
+
+                facets[facet.Key] = values;
+            }
 
             SearchOutput output = new SearchOutput();
             output.count = response.Value.TotalCount;
             output.results = response.Value.GetResults().ToList();
             output.answers = qnaResponse.Answers.First();
+            output.facets = facets;
 
             return new OkObjectResult(output);
         }

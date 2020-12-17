@@ -48,7 +48,7 @@ export default function Search() {
         setResultCount(response.data.count);
 
         if (currentPage === 1) {
-          setAnswer(response.data.answers[0]);
+          setAnswer(response.data.answers);
         }
         setIsLoading(false);
       })

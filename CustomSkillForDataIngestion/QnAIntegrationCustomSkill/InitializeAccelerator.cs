@@ -126,6 +126,10 @@ namespace AzureCognitiveSearch.QnAIntegrationCustomSkill
                 }
                 };
 
+                var suggester = new SearchSuggester("sg", new[] { "keyPhrases" });
+                index.Suggesters.Add(suggester);
+
+
                 await idxclient.CreateIndexAsync(index);
             }
             catch (Exception e)
