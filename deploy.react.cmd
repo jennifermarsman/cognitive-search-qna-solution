@@ -90,8 +90,8 @@ echo Handling node.js deployment.
 
 call :SelectNodeVersion
 
-echo SETTING VARIABLES
-SET WEB_CONFIG=SearchUI\web.config
+::echo SETTING VARIABLES
+::SET WEB_CONFIG=SearchUI\web.config
 SET BUILD_DIR=build
 
 :: 1. Build & KuduSync
@@ -105,15 +105,15 @@ IF /I "%IN_PLACE_DEPLOYMENT%" NEQ "1" (
   ::rm -rf node_modules
   call :ExecuteCmd !NPM_CMD! config set scripts-prepend-node-path true
 
-  echo RUNNINB NPM INSTALL
+  echo RUNNINN NPM INSTALL
   call :ExecuteCmd !NPM_CMD! install
   IF !ERRORLEVEL! NEQ 0 goto error
 
-  echo RUNNINB BUILD COMMAND
+  echo RUNNING BUILD COMMAND
   call :ExecuteCmd !NPM_CMD! run build
   IF !ERRORLEVEL! NEQ 0 goto error
 
-  cp %WEB_CONFIG% %BUILD_DIR%
+  ::cp %WEB_CONFIG% %BUILD_DIR%
 
   popd
 
