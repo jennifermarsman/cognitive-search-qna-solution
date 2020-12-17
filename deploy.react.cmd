@@ -91,7 +91,7 @@ echo Handling node.js deployment.
 call :SelectNodeVersion
 
 ::echo SETTING VARIABLES
-::SET WEB_CONFIG=SearchUI\web.config
+SET WEB_CONFIG=azure\web.config
 SET BUILD_DIR=build
 
 :: 1. Build & KuduSync
@@ -105,7 +105,7 @@ IF /I "%IN_PLACE_DEPLOYMENT%" NEQ "1" (
   ::rm -rf node_modules
   call :ExecuteCmd !NPM_CMD! config set scripts-prepend-node-path true
 
-  echo RUNNINN NPM INSTALL
+  echo RUNNING NPM INSTALL
   call :ExecuteCmd !NPM_CMD! install
   IF !ERRORLEVEL! NEQ 0 goto error
 
