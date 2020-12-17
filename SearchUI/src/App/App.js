@@ -46,7 +46,7 @@ export default function App() {
       const contentType = response.headers.get("content-type");
       if (contentType && contentType.indexOf("application/json") !== -1) {
         response.json()
-          .then(response => setKnowledgeBaseID(response.QnAMakerKnowledgeBaseID))
+          .then(response => setKnowledgeBaseID(response.qnAMakerKnowledgeBaseID))
           .catch(error => console.error('Error:', error));
       }
     }
