@@ -65,8 +65,8 @@
         }
     },
     "variables": {
-        "repoURL": "https://github.com/dereklegenzoff/cognitive-search-qna-solution",
-        "repoDirectory": "dereklegenzoff/cognitive-search-qna-solution/",
+        "repoURL": "https://github.com/jennifermarsman/cognitive-search-qna-solution",
+        "repoDirectory": "jennifermarsman/cognitive-search-qna-solution/",
         "branch": "main",
         "reactProject": "SearchUI",
         "functionProject": "CustomSkillForDataIngestion\\QnAIntegrationCustomSkill\\QnAIntegrationCustomSkill.csproj",

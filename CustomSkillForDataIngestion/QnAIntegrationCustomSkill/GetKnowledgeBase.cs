@@ -7,29 +7,51 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Azure.Storage.Blobs;
+using Common;
+using Azure.Storage.Blobs.Models;
 
 namespace QnAIntegrationCustomSkill
 {
+    
+
     public static class GetKnowledgeBase
     {
-        [FunctionName("GetKnowledgeBase")]
+        public static string kbId;
+
+        [FunctionName("GetKb")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
         {
             log.LogInformation("C# HTTP trigger function processed a request.");
 
-            string name = req.Query["name"];
+            BlobServiceClient blobServiceClient = new BlobServiceClient(Environment.GetEnvironmentVariable("AzureWebJobsStorage", EnvironmentVariableTarget.Process));
+            BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(Constants.kbContainerName);
 
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            dynamic data = JsonConvert.DeserializeObject(requestBody);
-            name = name ?? data?.name;
+            if (string.IsNullOrEmpty(kbId))
+            {
+                BlobClient kbidBlobClient = containerClient.GetBlobClient(Constants.kbIdBlobName);
+                // Check blob for kbid 
+                if (await kbidBlobClient.ExistsAsync())
+                {
+                    BlobDownloadInfo download = await kbidBlobClient.DownloadAsync();
+                    using (var streamReader = new StreamReader(download.Content))
+                    {
+                        while (!streamReader.EndOfStream)
+                        {
+                            kbId = await streamReader.ReadLineAsync();
+                        }
+                    }
+                }
+            }
 
-            string responseMessage = string.IsNullOrEmpty(name)
-                ? "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."
-                : $"Hello, {name}. This HTTP triggered function executed successfully.";
+            GetKbOutput output = new GetKbOutput()
+            {
+                QnAMakerKnowledgeBaseID = kbId
+            };
 
-            return new OkObjectResult(responseMessage);
+            return new OkObjectResult(output);
         }
     }
 }

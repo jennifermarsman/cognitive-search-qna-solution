@@ -15,6 +15,11 @@ using System.Collections.Generic;
 using Microsoft.Extensions.Options;
 using Azure.Search.Documents.Models;
 using System.Linq;
+using Azure.Storage;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
+using Microsoft.Azure.CognitiveServices.Knowledge.QnAMaker;
+using Microsoft.Azure.CognitiveServices.Knowledge.QnAMaker.Models;
 
 namespace QnAIntegrationCustomSkill
 {
@@ -23,8 +28,11 @@ namespace QnAIntegrationCustomSkill
         private static string searchApiKey = Environment.GetEnvironmentVariable("SearchServiceApiKey", EnvironmentVariableTarget.Process);
         private static string searchServiceName = Environment.GetEnvironmentVariable("SearchServiceName", EnvironmentVariableTarget.Process);
         private static string searchIndexName = Constants.indexName;
-        //private static string searchIndexName = "qna-index";
-        private static string qnaMakerEndpoint = Environment.GetEnvironmentVariable("QnAMakerEndpoint", EnvironmentVariableTarget.Process);
+       
+        private static string storageAccountName = Environment.GetEnvironmentVariable("StorageAccountName", EnvironmentVariableTarget.Process);
+        private static string storageAccountKey = Environment.GetEnvironmentVariable("StorageAccountKey", EnvironmentVariableTarget.Process);
+
+        private static StorageSharedKeyCredential sharedStorageCredentials = new StorageSharedKeyCredential(storageAccountName, storageAccountKey);
 
         // Create a SearchIndexClient to send create/delete index commands
         private static Uri serviceEndpoint = new Uri($"https://{searchServiceName}.search.windows.net/");
@@ -33,6 +41,10 @@ namespace QnAIntegrationCustomSkill
 
         // Create a SearchClient to load and query documents
         private static SearchClient searchClient = new SearchClient(serviceEndpoint, searchIndexName, credential);
+
+        private static string kbId;
+        private static string qnaRuntimeKey;
+        private static string qnaMakerEndpoint = Environment.GetEnvironmentVariable("QnAMakerEndpoint", EnvironmentVariableTarget.Process);
 
         [FunctionName("Search")]
         public static async Task<IActionResult> Run(
@@ -51,6 +63,57 @@ namespace QnAIntegrationCustomSkill
             top = top ?? data?.top;
             skip = skip ?? data?.skip;
 
+            var containerUrl = new Uri($"https://{storageAccountName}.blob.core.windows.net/{Constants.kbContainerName}");
+            BlobContainerClient containerClient = new BlobContainerClient(containerUrl, sharedStorageCredentials);
+
+            if (string.IsNullOrEmpty(kbId))
+            {
+                BlobClient kbidBlobClient = containerClient.GetBlobClient(Constants.kbIdBlobName);
+                // Check blob for kbid 
+                if (await kbidBlobClient.ExistsAsync())
+                {
+                    BlobDownloadInfo download = await kbidBlobClient.DownloadAsync();
+                    using (var streamReader = new StreamReader(download.Content))
+                    {
+                        while (!streamReader.EndOfStream)
+                        {
+                            kbId = await streamReader.ReadLineAsync();
+                        }
+                    }
+                }
+            }
+
+            if (string.IsNullOrEmpty(qnaRuntimeKey))
+            {
+                BlobClient keyBlobClient = containerClient.GetBlobClient(Constants.keyBlobName);
+                // Check blob for kbid 
+                if (await keyBlobClient.ExistsAsync())
+                {
+                    BlobDownloadInfo download = await keyBlobClient.DownloadAsync();
+                    using (var streamReader = new StreamReader(download.Content))
+                    {
+                        while (!streamReader.EndOfStream)
+                        {
+                            qnaRuntimeKey = await streamReader.ReadLineAsync();
+                        }
+                    }
+                }
+            }
+
+            var runtimeClient = new QnAMakerRuntimeClient(new EndpointKeyServiceClientCredentials(qnaRuntimeKey))
+            {
+                RuntimeEndpoint = qnaMakerEndpoint
+            };
+
+            var qnaOptions = new QueryDTO
+            {
+                Question = q,
+                Top = 1,
+                ScoreThreshold = 30
+            };
+            QnASearchResultList qnaResponse = await runtimeClient.Runtime.GenerateAnswerAsync(kbId, qnaOptions);
+
+
             SearchOptions options = new SearchOptions()
             {
                 Size = int.Parse(top),
@@ -65,6 +128,7 @@ namespace QnAIntegrationCustomSkill
             SearchOutput output = new SearchOutput();
             output.count = response.Value.TotalCount;
             output.results = response.Value.GetResults().ToList();
+            output.answers = qnaResponse.Answers.First();
 
             return new OkObjectResult(output);
         }
