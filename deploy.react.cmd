@@ -90,22 +90,26 @@ echo Handling node.js deployment.
 
 call :SelectNodeVersion
 
-SET WEB_CONFIG=azure/web.config
+echo SETTING VARIABLES
+SET WEB_CONFIG=web.config
 SET BUILD_DIR=build
 
 :: 1. Build & KuduSync
+echo INSTALLING AND BUILDING APP
 IF /I "%IN_PLACE_DEPLOYMENT%" NEQ "1" (
   pushd "%DEPLOYMENT_SOURCE%\SearchUI"
 
-  echo INSTALLING AND BUILDING APP
+  
   ::if you've want to clean npm cache uncomment following two lines
   ::call :ExecuteCmd !NPM_CMD! cache clean --force
   ::rm -rf node_modules
   call :ExecuteCmd !NPM_CMD! config set scripts-prepend-node-path true
 
+  echo RUNNINB NPM INSTALL
   call :ExecuteCmd !NPM_CMD! install
   IF !ERRORLEVEL! NEQ 0 goto error
 
+  echo RUNNINB BUILD COMMAND
   call :ExecuteCmd !NPM_CMD! run build
   IF !ERRORLEVEL! NEQ 0 goto error
 
