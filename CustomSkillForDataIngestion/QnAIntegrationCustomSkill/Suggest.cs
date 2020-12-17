@@ -57,7 +57,10 @@ namespace QnAIntegrationCustomSkill
 
             var response = await searchClient.AutocompleteAsync(q, suggester, options);
 
-            return new OkObjectResult(response.Value.Results);
+            var output = new Dictionary<string, List<AutocompleteItem>>();
+
+            output["suggestions"] = response.Value.Results.ToList();
+            return new OkObjectResult(output);
         }
     }
 }
