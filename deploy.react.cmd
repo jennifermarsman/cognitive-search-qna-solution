@@ -91,7 +91,7 @@ echo Handling node.js deployment.
 call :SelectNodeVersion
 
 echo SETTING VARIABLES
-SET WEB_CONFIG=web.config
+SET WEB_CONFIG=SearchUI\web.config
 SET BUILD_DIR=build
 
 :: 1. Build & KuduSync
