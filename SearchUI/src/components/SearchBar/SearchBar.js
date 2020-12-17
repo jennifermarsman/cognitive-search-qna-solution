@@ -47,11 +47,15 @@ export default function SearchBar(props) {
                 suggester: 'sg'
             };
 
+            const headers = {
+                "x-functions-key": process.env.REACT_APP_FUNCTION_CODE
+              };
+
             if (q === '') {
                 setSuggestions([]);
             } else {
-                const url = process.env.REACT_APP_FUNCTION_URL + '/api/suggest?code=' + process.env.REACT_APP_FUNCTION_CODE;
-                axios.post( url, body)
+                const url = process.env.REACT_APP_FUNCTION_URL + '/api/suggest';
+                axios.post( url, body, {headers: headers})
                 .then( response => {
                     setSuggestions(response.data.suggestions);
                 } )

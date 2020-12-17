@@ -40,8 +40,13 @@ export default function App() {
 
   // Fetch knowledge base id to construct link in nav bar
   async function fetchKnowledgeBaseID() {
-    const url = process.env.REACT_APP_FUNCTION_URL + '/api/getKb?code=' + process.env.REACT_APP_FUNCTION_CODE;
-    const response = await fetch(url);
+
+    const headers = {
+      "x-functions-key": process.env.REACT_APP_FUNCTION_CODE
+    };
+    
+    const url = process.env.REACT_APP_FUNCTION_URL + '/api/getKb';
+    const response = await fetch(url, {headers: headers});
     if (response) {
       const contentType = response.headers.get("content-type");
       if (contentType && contentType.indexOf("application/json") !== -1) {

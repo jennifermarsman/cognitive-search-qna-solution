@@ -36,8 +36,12 @@ export default function Upload() {
         file: base64File
       }
 
-      const url = process.env.REACT_APP_FUNCTION_URL + '/api/upload?code=' + process.env.REACT_APP_FUNCTION_CODE;
-      axios.post(url, body)
+      const headers = {
+        "x-functions-key": process.env.REACT_APP_FUNCTION_CODE
+      };
+
+      const url = process.env.REACT_APP_FUNCTION_URL + '/api/upload';
+      axios.post(url, body, {headers: headers})
         .then(response => {
           setIsLoading(false);
           setIsSuccess(true);

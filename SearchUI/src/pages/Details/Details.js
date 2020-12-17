@@ -21,10 +21,13 @@ export default function Details() {
   useEffect(() => {
     setIsLoading(true);
 
-    
-    const url = process.env.REACT_APP_FUNCTION_URL + '/api/lookup?id=' + id + '&code=' + process.env.REACT_APP_FUNCTION_CODE;
+    const headers = {
+      "x-functions-key": process.env.REACT_APP_FUNCTION_CODE
+    };
+
+    const url = process.env.REACT_APP_FUNCTION_URL + '/api/lookup?id=' + id;
     console.log(url);
-    axios.get(url)
+    axios.get(url, {headers: headers})
       .then(response => {
         const doc = response.data.document;
         const sas = response.data.sasToken;
