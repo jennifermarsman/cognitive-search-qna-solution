@@ -27,12 +27,10 @@ namespace QnAIntegrationCustomSkill
         private static string searchApiKey = Environment.GetEnvironmentVariable("SearchServiceApiKey", EnvironmentVariableTarget.Process);
         private static string searchServiceName = Environment.GetEnvironmentVariable("SearchServiceName", EnvironmentVariableTarget.Process);
         private static string searchIndexName = Constants.indexName;
-        //private static string searchIndexName = "qna-index";
 
         private static string storageAccountName = Environment.GetEnvironmentVariable("StorageAccountName", EnvironmentVariableTarget.Process);
         private static string storageAccountKey = Environment.GetEnvironmentVariable("StorageAccountKey", EnvironmentVariableTarget.Process);
         private static string storageContainerName = Constants.containerName;
-        //private static string storageContainerName = "covid-docs";
 
         private static StorageSharedKeyCredential sharedStorageCredentials = new StorageSharedKeyCredential(storageAccountName, storageAccountKey);
         private static BlobContainerClient blobContainerClient = new BlobContainerClient(new Uri($"https://{storageAccountName}.blob.core.windows.net/{storageContainerName}"), sharedStorageCredentials);

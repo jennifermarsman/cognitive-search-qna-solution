@@ -32,7 +32,7 @@ namespace QnAIntegrationCustomSkill
         private static string storageAccountName = Environment.GetEnvironmentVariable("StorageAccountName", EnvironmentVariableTarget.Process);
         private static string storageAccountKey = Environment.GetEnvironmentVariable("StorageAccountKey", EnvironmentVariableTarget.Process);
 
-        private static StorageSharedKeyCredential sharedStorageCredentials = new StorageSharedKeyCredential(storageAccountName, storageAccountKey);
+        private static BlobServiceClient blobServiceClient = new BlobServiceClient(Environment.GetEnvironmentVariable("AzureWebJobsStorage", EnvironmentVariableTarget.Process));
 
         // Create a SearchIndexClient to send create/delete index commands
         private static Uri serviceEndpoint = new Uri($"https://{searchServiceName}.search.windows.net/");
@@ -63,8 +63,7 @@ namespace QnAIntegrationCustomSkill
             top = top ?? data?.top;
             skip = skip ?? data?.skip;
 
-            var containerUrl = new Uri($"https://{storageAccountName}.blob.core.windows.net/{Constants.kbContainerName}");
-            BlobContainerClient containerClient = new BlobContainerClient(containerUrl, sharedStorageCredentials);
+            BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(Constants.kbContainerName);
 
             if (string.IsNullOrEmpty(kbId))
             {

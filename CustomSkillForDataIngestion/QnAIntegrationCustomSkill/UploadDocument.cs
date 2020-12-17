@@ -28,11 +28,9 @@ namespace QnAIntegrationCustomSkill
         private static string storageAccountName = Environment.GetEnvironmentVariable("StorageAccountName", EnvironmentVariableTarget.Process);
         private static string storageAccountKey = Environment.GetEnvironmentVariable("StorageAccountKey", EnvironmentVariableTarget.Process);
         private static string storageContainerName = Constants.containerName;
-        //private static string storageContainerName = "covid-docs";
 
-        private static StorageSharedKeyCredential sharedStorageCredentials = new StorageSharedKeyCredential(storageAccountName, storageAccountKey);
-        private static BlobContainerClient blobContainerClient = new BlobContainerClient(new Uri($"https://{storageAccountName}.blob.core.windows.net/{storageContainerName}"), sharedStorageCredentials);
-
+        private static BlobServiceClient blobServiceClient = new BlobServiceClient(Environment.GetEnvironmentVariable("AzureWebJobsStorage", EnvironmentVariableTarget.Process));
+        private static BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(Constants.containerName);
 
         [FunctionName("UploadDocument")]
         public static async Task<IActionResult> Run(
@@ -52,7 +50,7 @@ namespace QnAIntegrationCustomSkill
             var bytes = Convert.FromBase64String(file);
             var contents = new MemoryStream(bytes);
 
-            var response = await blobContainerClient.UploadBlobAsync(fileName, contents);
+            var response = await containerClient.UploadBlobAsync(fileName, contents);
 
 
             return new OkObjectResult(response.Value);
