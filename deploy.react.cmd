@@ -90,8 +90,8 @@ echo Handling node.js deployment.
 
 call :SelectNodeVersion
 
-::echo SETTING VARIABLES
-SET WEB_CONFIG=web.config
+echo SETTING VARIABLES
+SET WEB_CONFIG=azure/web.config
 SET BUILD_DIR=build
 
 :: 1. Build & KuduSync
