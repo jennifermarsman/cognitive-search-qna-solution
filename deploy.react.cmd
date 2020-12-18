@@ -101,8 +101,9 @@ IF /I "%IN_PLACE_DEPLOYMENT%" NEQ "1" (
 
   
   ::if you've want to clean npm cache uncomment following two lines
-  ::call :ExecuteCmd !NPM_CMD! cache clean --force
-  ::rm -rf node_modules
+  call :ExecuteCmd !NPM_CMD! cache clean --force
+  rm -rf node_modules
+  
   call :ExecuteCmd !NPM_CMD! config set scripts-prepend-node-path true
 
   echo RUNNING NPM INSTALL
