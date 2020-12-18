@@ -40,8 +40,6 @@ namespace QnAIntegrationCustomSkill
         // Create a SearchClient to load and query documents
         private static SearchClient searchClient = new SearchClient(serviceEndpoint, searchIndexName, credential);
 
-        private static string kbId;
-        private static string qnaRuntimeKey;
         private static QnAMakerRuntimeClient runtimeClient;
         private static string qnaMakerEndpoint = Environment.GetEnvironmentVariable("QnAMakerEndpoint", EnvironmentVariableTarget.Process);
 
@@ -51,6 +49,8 @@ namespace QnAIntegrationCustomSkill
             ILogger log)
         {
             log.LogInformation("C# HTTP trigger function processed a request.");
+
+
 
             string q = req.Query["q"];
             string top = req.Query["top"];
@@ -64,18 +64,13 @@ namespace QnAIntegrationCustomSkill
             skip = skip ?? data?.skip;
             getAnswer = getAnswer ?? data?.getAnswer;
 
+            string kbId;
+            string qnaRuntimeKey;
             QnASearchResultList qnaResponse = null;
             if (getAnswer.ToLower() == "true")
             {
-                if (string.IsNullOrEmpty(kbId))
-                {
-                    kbId = await GetKbId(log);
-                }
-
-                if (string.IsNullOrEmpty(qnaRuntimeKey))
-                {
-                    qnaRuntimeKey = await GetRuntimeKey(log);
-                }
+                kbId = await GetKbId(log);
+                qnaRuntimeKey = await GetRuntimeKey(log);
 
                 if (runtimeClient == null)
                 {

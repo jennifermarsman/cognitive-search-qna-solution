@@ -17,7 +17,7 @@ namespace QnAIntegrationCustomSkill
 
     public static class GetKnowledgeBase
     {
-        public static string kbId;
+        
         private static BlobServiceClient blobServiceClient = new BlobServiceClient(Environment.GetEnvironmentVariable("AzureWebJobsStorage", EnvironmentVariableTarget.Process));
 
         [FunctionName("GetKb")]
@@ -27,11 +27,7 @@ namespace QnAIntegrationCustomSkill
         {
             log.LogInformation("C# HTTP trigger function processed a request.");
 
-
-            if (string.IsNullOrEmpty(kbId))
-            {
-                kbId = await GetKbId(log);
-            }
+            string kbId = await GetKbId(log);
 
             GetKbOutput output = new GetKbOutput()
             {
