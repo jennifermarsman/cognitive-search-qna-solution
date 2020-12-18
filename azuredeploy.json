@@ -43,9 +43,8 @@
             }
         },
         "serverFarmsSku": {
-            "defaultValue": "S1",
+            "defaultValue": "S2",
             "allowedValues": [
-                "F1",
                 "D1",
                 "B1",
                 "B2",
