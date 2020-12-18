@@ -20,7 +20,7 @@ This solution accelerator contains the following artifacts:
 
 You can view a live demo of this repo at the following link:
 
-[https://ambitious-tree-00baa321e.azurestaticapps.net](https://ambitious-tree-00baa321e.azurestaticapps.net)
+[https://qna-ui-72xfkwenjkcd2.azurewebsites.net/](https://qna-ui-72xfkwenjkcd2.azurewebsites.net/)
 
 ## Prerequisites
 
@@ -75,11 +75,14 @@ ___
 
 ### 4. Go to the UI
 
-As part of the ARM template, a UI is deployed to `https://{prefix}-ui-{randomString}.azurewebsites.net`. At this point, you should consider [adding authentication to the web app in the Azure portal](https://docs.microsoft.com/en-us/azure/app-service/scenario-secure-app-authentication-app-service) to secure your data.
-
-The UI is a React based Web App available in the `SearchUI` folder. Navigate to [**SearchUI/README.md**](search-ui/README.md) for full details on the web app. 
+As part of the ARM template, a UI is deployed to `https://{prefix}-ui-{randomString}.azurewebsites.net` similar to the screenshot below. Keep in mind it will take a few minutes for the documents to become available in the search index after adding them to storage. 
 
 ![Screenshot of sample web app](./images/search-results.png)
+At this point, you should consider [adding authentication to the web app in the Azure portal](https://docs.microsoft.com/en-us/azure/app-service/scenario-secure-app-authentication-app-service) to secure your data.
+
+The UI is a React based Web App available in the `SearchUI` folder. Navigate to [**SearchUI/README.md**](search-ui/README.md) for more details on the web app. 
+
+
 
 ## Resources
 + [Cognitive Search Documentation](https://docs.microsoft.com/azure/search/)
