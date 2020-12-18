@@ -52,22 +52,20 @@ namespace QnAIntegrationCustomSkill
 
 
 
-            string q = req.Query["q"];
-            string top = req.Query["top"];
-            string skip = req.Query["skip"];
-            string getAnswer = req.Query["getAnswer"];
+            //string q = req.Query["q"];
+            //string top = req.Query["top"];
+            //string skip = req.Query["skip"];
+            //string getAnswer = req.Query["getAnswer"];
+            //string filters = req.Query["filters"];
+
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            dynamic data = JsonConvert.DeserializeObject(requestBody);
-            q = q ?? data?.q;
-            top = top ?? data?.top;
-            skip = skip ?? data?.skip;
-            getAnswer = getAnswer ?? data?.getAnswer;
+            SearchRequest data = JsonConvert.DeserializeObject<SearchRequest>(requestBody);
 
             string kbId;
             string qnaRuntimeKey;
             QnASearchResultList qnaResponse = null;
-            if (getAnswer.ToLower() == "true")
+            if (data.getAnswer)
             {
                 kbId = await GetKbId(log);
                 qnaRuntimeKey = await GetRuntimeKey(log);
@@ -82,7 +80,7 @@ namespace QnAIntegrationCustomSkill
 
                 var qnaOptions = new QueryDTO
                 {
-                    Question = q,
+                    Question = data.q,
                     Top = 1,
                     ScoreThreshold = 30
                 };
@@ -93,9 +91,10 @@ namespace QnAIntegrationCustomSkill
 
             SearchOptions options = new SearchOptions()
             {
-                Size = int.Parse(top),
-                Skip = int.Parse(skip),
+                Size = data.top,
+                Skip = data.skip,
                 IncludeTotalCount = true,
+                Filter = CreateFilterExpression(data.filters)
             };
 
             options.Facets.Add("keyPhrases");
@@ -105,7 +104,7 @@ namespace QnAIntegrationCustomSkill
             options.Select.Add("metadata_storage_path");
             options.Select.Add("id");
 
-            var response = await searchClient.SearchAsync<SearchDocument>(RemoveStopwords(q), options);
+            var response = await searchClient.SearchAsync<SearchDocument>(RemoveStopwords(data.q), options);
 
             Dictionary<string, IList<FacetValue>> facets = new Dictionary<string, IList<FacetValue>>();
 
@@ -157,6 +156,31 @@ namespace QnAIntegrationCustomSkill
             }
 
             return string.Join(" ", outputs);
+        }
+
+        public static string CreateFilterExpression(List<SearchFilter> filters)
+        {
+            if (filters == null || filters.Count <= 0)
+            {
+                return null;
+            }
+
+            List<string> filterExpressions = new List<string>();
+
+            List<SearchFilter> keyPhraseFilters = filters.Where(f => f.field == "keyPhrases").ToList();
+            List<SearchFilter> fileTypeFilters = filters.Where(f => f.field == "fileType").ToList();
+
+            List<string> keyPhraseFilterValues = keyPhraseFilters.Select(f => f.value).ToList();
+            string filterStr = string.Join(",", keyPhraseFilterValues);
+            filterExpressions.Add($"{"keyPhrases"}/any(t: search.in(t, '{filterStr}', ','))");
+
+            List<string> fileTypeFilterValues = fileTypeFilters.Select(f => f.value).ToList();
+            foreach (var value in fileTypeFilterValues)
+            {
+                filterExpressions.Add($"fileType eq '{value}'");
+            }
+
+            return string.Join(" and ", filterExpressions);
         }
 
         private static async Task<string> GetKbId(ILogger log)

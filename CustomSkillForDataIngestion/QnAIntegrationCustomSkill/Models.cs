@@ -15,14 +15,29 @@ namespace QnAIntegrationCustomSkill
         public QnASearchResult answers { get; set; }
     }
 
-    class LookupOutput
+    public class SearchRequest
+    {
+        public string q { get; set; }
+        public int top { get; set; }
+        public int skip { get; set; }
+        public bool getAnswer { get; set; }
+        public List<SearchFilter> filters { get; set; }
+    }
+
+    public class SearchFilter
+    {
+        public string field { get; set; }
+        public string value { get; set; }
+    }
+
+    public class LookupOutput
     {
         public string sasToken { get; set; }
         public SearchDocument document { get; set; }
 
     }
 
-    class GetKbOutput
+    public class GetKbOutput
     {
         public string QnAMakerKnowledgeBaseID { get; set; }
     }
