@@ -33,7 +33,8 @@ export default function Upload() {
 
       let body = {
         name: file.name,
-        file: base64File
+        file: base64File,
+        fileType: file.type
       }
 
       const headers = {

@@ -20,38 +20,37 @@ using Azure.Storage;
 using Azure.Storage.Sas;
 using System.Net;
 using System.Net.Http;
+using Azure.Storage.Blobs.Models;
 
 namespace QnAIntegrationCustomSkill
 {
     public static class UploadDocument
     {
-        private static string storageAccountName = Environment.GetEnvironmentVariable("StorageAccountName", EnvironmentVariableTarget.Process);
-        private static string storageAccountKey = Environment.GetEnvironmentVariable("StorageAccountKey", EnvironmentVariableTarget.Process);
-        private static string storageContainerName = Constants.containerName;
-
         private static BlobServiceClient blobServiceClient = new BlobServiceClient(Environment.GetEnvironmentVariable("AzureWebJobsStorage", EnvironmentVariableTarget.Process));
         private static BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(Constants.containerName);
 
-        [FunctionName("UploadDocument")]
+        [FunctionName("Upload")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
         {
             log.LogInformation("C# HTTP trigger function processed a request.");
 
-            string fileName = req.Query["fileName"];
+            string fileName = req.Query["name"];
             string file = req.Query["file"];
+            string fileType = req.Query["fileType"];
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             dynamic data = JsonConvert.DeserializeObject(requestBody);
-            fileName = fileName ?? data?.fileName;
+            fileName = fileName ?? data?.name;
             file = file ?? data?.file;
+            fileType = fileType ?? data?.fileType;
 
             var bytes = Convert.FromBase64String(file);
             var contents = new MemoryStream(bytes);
 
-            var response = await containerClient.UploadBlobAsync(fileName, contents);
-
+            BlobClient blobClient = containerClient.GetBlobClient(fileName);
+            var response = await blobClient.UploadAsync(contents, new BlobHttpHeaders { ContentType = fileType });
 
             return new OkObjectResult(response.Value);
         }

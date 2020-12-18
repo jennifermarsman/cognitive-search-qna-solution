@@ -8,11 +8,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Common;
-using Azure.Search.Documents.Indexes;
 using Azure;
 using Azure.Search.Documents;
 using System.Collections.Generic;
-using Microsoft.Extensions.Options;
 using Azure.Search.Documents.Models;
 using System.Linq;
 using Azure.Storage;
@@ -20,6 +18,7 @@ using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.Azure.CognitiveServices.Knowledge.QnAMaker;
 using Microsoft.Azure.CognitiveServices.Knowledge.QnAMaker.Models;
+using Microsoft.Azure.Documents.SystemFunctions;
 
 namespace QnAIntegrationCustomSkill
 {
@@ -37,13 +36,13 @@ namespace QnAIntegrationCustomSkill
         // Create a SearchIndexClient to send create/delete index commands
         private static Uri serviceEndpoint = new Uri($"https://{searchServiceName}.search.windows.net/");
         private static AzureKeyCredential credential = new AzureKeyCredential(searchApiKey);
-        private static SearchIndexClient adminClient = new SearchIndexClient(serviceEndpoint, credential);
 
         // Create a SearchClient to load and query documents
         private static SearchClient searchClient = new SearchClient(serviceEndpoint, searchIndexName, credential);
 
         private static string kbId;
         private static string qnaRuntimeKey;
+        private static QnAMakerRuntimeClient runtimeClient;
         private static string qnaMakerEndpoint = Environment.GetEnvironmentVariable("QnAMakerEndpoint", EnvironmentVariableTarget.Process);
 
         [FunctionName("Search")]
@@ -56,61 +55,45 @@ namespace QnAIntegrationCustomSkill
             string q = req.Query["q"];
             string top = req.Query["top"];
             string skip = req.Query["skip"];
+            string getAnswer = req.Query["getAnswer"];
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             dynamic data = JsonConvert.DeserializeObject(requestBody);
             q = q ?? data?.q;
             top = top ?? data?.top;
             skip = skip ?? data?.skip;
+            getAnswer = getAnswer ?? data?.getAnswer;
 
-            BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(Constants.kbContainerName);
-
-            if (string.IsNullOrEmpty(kbId))
+            QnASearchResultList qnaResponse = null;
+            if (getAnswer.ToLower() == "true")
             {
-                BlobClient kbidBlobClient = containerClient.GetBlobClient(Constants.kbIdBlobName);
-                // Check blob for kbid 
-                if (await kbidBlobClient.ExistsAsync())
+                if (string.IsNullOrEmpty(kbId))
                 {
-                    BlobDownloadInfo download = await kbidBlobClient.DownloadAsync();
-                    using (var streamReader = new StreamReader(download.Content))
-                    {
-                        while (!streamReader.EndOfStream)
-                        {
-                            kbId = await streamReader.ReadLineAsync();
-                        }
-                    }
+                    kbId = await GetKbId(log);
                 }
-            }
 
-            if (string.IsNullOrEmpty(qnaRuntimeKey))
-            {
-                BlobClient keyBlobClient = containerClient.GetBlobClient(Constants.keyBlobName);
-                // Check blob for kbid 
-                if (await keyBlobClient.ExistsAsync())
+                if (string.IsNullOrEmpty(qnaRuntimeKey))
                 {
-                    BlobDownloadInfo download = await keyBlobClient.DownloadAsync();
-                    using (var streamReader = new StreamReader(download.Content))
-                    {
-                        while (!streamReader.EndOfStream)
-                        {
-                            qnaRuntimeKey = await streamReader.ReadLineAsync();
-                        }
-                    }
+                    qnaRuntimeKey = await GetRuntimeKey(log);
                 }
+
+                if (runtimeClient == null)
+                {
+                    runtimeClient = new QnAMakerRuntimeClient(new EndpointKeyServiceClientCredentials(qnaRuntimeKey))
+                    {
+                        RuntimeEndpoint = qnaMakerEndpoint
+                    };
+                }
+
+                var qnaOptions = new QueryDTO
+                {
+                    Question = q,
+                    Top = 1,
+                    ScoreThreshold = 30
+                };
+                qnaResponse = await runtimeClient.Runtime.GenerateAnswerAsync(kbId, qnaOptions);
+
             }
-
-            var runtimeClient = new QnAMakerRuntimeClient(new EndpointKeyServiceClientCredentials(qnaRuntimeKey))
-            {
-                RuntimeEndpoint = qnaMakerEndpoint
-            };
-
-            var qnaOptions = new QueryDTO
-            {
-                Question = q,
-                Top = 1,
-                ScoreThreshold = 30
-            };
-            QnASearchResultList qnaResponse = await runtimeClient.Runtime.GenerateAnswerAsync(kbId, qnaOptions);
 
 
             SearchOptions options = new SearchOptions()
@@ -122,8 +105,10 @@ namespace QnAIntegrationCustomSkill
 
             options.Facets.Add("keyPhrases");
             options.Facets.Add("fileType");
-
             options.HighlightFields.Add("content");
+            options.Select.Add("metadata_storage_name");
+            options.Select.Add("metadata_storage_path");
+            options.Select.Add("id");
 
             var response = await searchClient.SearchAsync<SearchDocument>(q, options);
 
@@ -146,10 +131,76 @@ namespace QnAIntegrationCustomSkill
             SearchOutput output = new SearchOutput();
             output.count = response.Value.TotalCount;
             output.results = response.Value.GetResults().ToList();
-            output.answers = qnaResponse.Answers.First();
             output.facets = facets;
 
+            if (qnaResponse != null)
+            {
+                output.answers = qnaResponse.Answers.First();
+            }
+
             return new OkObjectResult(output);
+        }
+
+        private static async Task<string> GetKbId(ILogger log)
+        {
+            string kbID = string.Empty;
+            var path = Path.Join(Environment.GetEnvironmentVariable("HOME", EnvironmentVariableTarget.Process), Constants.qnamakerFolderPath);
+            var filePath = Path.Join(path, Constants.kbIdBlobName + ".txt");
+            // Check for kbid in local file system
+            if (File.Exists(filePath))
+            {
+                kbID = File.ReadAllText(filePath);
+            }
+            else
+            {
+                BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(Constants.kbContainerName);
+                BlobClient kbidBlobClient = containerClient.GetBlobClient(Constants.kbIdBlobName);
+                // Check blob for kbid 
+                if (await kbidBlobClient.ExistsAsync())
+                {
+                    BlobDownloadInfo download = await kbidBlobClient.DownloadAsync();
+                    using (var streamReader = new StreamReader(download.Content))
+                    {
+                        while (!streamReader.EndOfStream)
+                        {
+                            kbID = await streamReader.ReadLineAsync();
+                        }
+                    }
+                }
+
+            }
+            return kbID;
+        }
+
+        private static async Task<string> GetRuntimeKey(ILogger log)
+        {
+            string runtimeKey = string.Empty;
+            var path = Path.Join(Environment.GetEnvironmentVariable("HOME", EnvironmentVariableTarget.Process), Constants.qnamakerFolderPath);
+            var filePath = Path.Join(path, Constants.keyBlobName + ".txt");
+            // Check for kbid in local file system
+            if (File.Exists(filePath))
+            {
+                runtimeKey = File.ReadAllText(filePath);
+            }
+            else
+            {
+                BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(Constants.kbContainerName);
+                BlobClient keyBlobClient = containerClient.GetBlobClient(Constants.keyBlobName);
+                // Check blob for kbid 
+                if (await keyBlobClient.ExistsAsync())
+                {
+                    BlobDownloadInfo download = await keyBlobClient.DownloadAsync();
+                    using (var streamReader = new StreamReader(download.Content))
+                    {
+                        while (!streamReader.EndOfStream)
+                        {
+                            runtimeKey = await streamReader.ReadLineAsync();
+                        }
+                    }
+                }
+
+            }
+            return runtimeKey;
         }
     }
 }

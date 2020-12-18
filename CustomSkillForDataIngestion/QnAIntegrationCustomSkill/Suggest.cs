@@ -8,11 +8,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Common;
-using Azure.Search.Documents.Indexes;
 using Azure;
 using Azure.Search.Documents;
 using System.Collections.Generic;
-using Microsoft.Extensions.Options;
 using Azure.Search.Documents.Models;
 using System.Linq;
 
@@ -23,12 +21,10 @@ namespace QnAIntegrationCustomSkill
         private static string searchApiKey = Environment.GetEnvironmentVariable("SearchServiceApiKey", EnvironmentVariableTarget.Process);
         private static string searchServiceName = Environment.GetEnvironmentVariable("SearchServiceName", EnvironmentVariableTarget.Process);
         private static string searchIndexName = Constants.indexName;
-        //private static string searchIndexName = "qna-index";
 
         // Create a SearchIndexClient to send create/delete index commands
         private static Uri serviceEndpoint = new Uri($"https://{searchServiceName}.search.windows.net/");
         private static AzureKeyCredential credential = new AzureKeyCredential(searchApiKey);
-        private static SearchIndexClient adminClient = new SearchIndexClient(serviceEndpoint, credential);
 
         // Create a SearchClient to load and query documents
         private static SearchClient searchClient = new SearchClient(serviceEndpoint, searchIndexName, credential);

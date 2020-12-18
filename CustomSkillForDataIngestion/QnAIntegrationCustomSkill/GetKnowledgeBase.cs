@@ -18,6 +18,7 @@ namespace QnAIntegrationCustomSkill
     public static class GetKnowledgeBase
     {
         public static string kbId;
+        private static BlobServiceClient blobServiceClient = new BlobServiceClient(Environment.GetEnvironmentVariable("AzureWebJobsStorage", EnvironmentVariableTarget.Process));
 
         [FunctionName("GetKb")]
         public static async Task<IActionResult> Run(
@@ -26,11 +27,33 @@ namespace QnAIntegrationCustomSkill
         {
             log.LogInformation("C# HTTP trigger function processed a request.");
 
-            BlobServiceClient blobServiceClient = new BlobServiceClient(Environment.GetEnvironmentVariable("AzureWebJobsStorage", EnvironmentVariableTarget.Process));
-            BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(Constants.kbContainerName);
 
             if (string.IsNullOrEmpty(kbId))
             {
+                kbId = await GetKbId(log);
+            }
+
+            GetKbOutput output = new GetKbOutput()
+            {
+                QnAMakerKnowledgeBaseID = kbId
+            };
+
+            return new OkObjectResult(output);
+        }
+
+        private static async Task<string> GetKbId(ILogger log)
+        {
+            string kbId = string.Empty;
+            var path = Path.Join(Environment.GetEnvironmentVariable("HOME", EnvironmentVariableTarget.Process), Constants.qnamakerFolderPath);
+            var filePath = Path.Join(path, Constants.kbIdBlobName + ".txt");
+            // Check for kbid in local file system
+            if (File.Exists(filePath))
+            {
+                kbId = File.ReadAllText(filePath);
+            }
+            else
+            {
+                BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(Constants.kbContainerName);
                 BlobClient kbidBlobClient = containerClient.GetBlobClient(Constants.kbIdBlobName);
                 // Check blob for kbid 
                 if (await kbidBlobClient.ExistsAsync())
@@ -44,14 +67,9 @@ namespace QnAIntegrationCustomSkill
                         }
                     }
                 }
+
             }
-
-            GetKbOutput output = new GetKbOutput()
-            {
-                QnAMakerKnowledgeBaseID = kbId
-            };
-
-            return new OkObjectResult(output);
+            return kbId;
         }
     }
 }
