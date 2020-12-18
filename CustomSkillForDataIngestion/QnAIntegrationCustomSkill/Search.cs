@@ -69,14 +69,10 @@ namespace QnAIntegrationCustomSkill
             {
                 kbId = await GetKbId(log);
                 qnaRuntimeKey = await GetRuntimeKey(log);
-
-                if (runtimeClient == null)
+                runtimeClient = new QnAMakerRuntimeClient(new EndpointKeyServiceClientCredentials(qnaRuntimeKey))
                 {
-                    runtimeClient = new QnAMakerRuntimeClient(new EndpointKeyServiceClientCredentials(qnaRuntimeKey))
-                    {
-                        RuntimeEndpoint = qnaMakerEndpoint
-                    };
-                }
+                    RuntimeEndpoint = qnaMakerEndpoint
+                };
 
                 var qnaOptions = new QueryDTO
                 {
@@ -171,8 +167,12 @@ namespace QnAIntegrationCustomSkill
             List<SearchFilter> fileTypeFilters = filters.Where(f => f.field == "fileType").ToList();
 
             List<string> keyPhraseFilterValues = keyPhraseFilters.Select(f => f.value).ToList();
-            string filterStr = string.Join(",", keyPhraseFilterValues);
-            filterExpressions.Add($"{"keyPhrases"}/any(t: search.in(t, '{filterStr}', ','))");
+
+            if (keyPhraseFilterValues.Count > 0)
+            {
+                string filterStr = string.Join(",", keyPhraseFilterValues);
+                filterExpressions.Add($"{"keyPhrases"}/any(t: search.in(t, '{filterStr}', ','))");
+            }
 
             List<string> fileTypeFilterValues = fileTypeFilters.Select(f => f.value).ToList();
             foreach (var value in fileTypeFilterValues)
