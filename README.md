@@ -20,7 +20,7 @@ This solution accelerator contains the following artifacts:
 
 You can view a live demo of this repo at the following link:
 
-[https://qna-ui-72xfkwenjkcd2.azurewebsites.net/](https://qna-ui-72xfkwenjkcd2.azurewebsites.net/)
+[https://qna-ui-i3iohrgwgujpo.azurewebsites.net/](https://qna-ui-i3iohrgwgujpo.azurewebsites.net/)
 
 ## Prerequisites
 
@@ -63,7 +63,7 @@ Copy the value of the HTTP Trigger. You'll use this value in the next step.
 
 Open up a new browser tab and paste the URL into the browser. This will run for about a minute and then you'll see a message indicating success or failure.
 
-![Initalize solution accelerator](./images/initialize-accelerator.png)
+![Initialize solution accelerator](./images/initialize-accelerator.png)
 
 ### 3. Upload documents
 
@@ -78,9 +78,16 @@ ___
 As part of the ARM template, a UI is deployed to `https://{prefix}-ui-{randomString}.azurewebsites.net` similar to the screenshot below. Keep in mind it will take a few minutes for the documents to become available in the search index after adding them to storage. 
 
 ![Screenshot of sample web app](./images/search-results.png)
+<<<<<<< HEAD
 At this point, you should consider [adding authentication to the web app in the Azure portal](https://docs.microsoft.com/en-us/azure/app-service/scenario-secure-app-authentication-app-service) to secure your data.
 
 The UI is a React based Web App available in the `SearchUI` folder. Navigate to [**SearchUI/README.md**](search-ui/README.md) for more details on the web app. 
+=======
+
+At this point, you should consider [adding authentication to the web app in the Azure portal](https://docs.microsoft.com/en-us/azure/app-service/scenario-secure-app-authentication-app-service) to secure your data.
+
+The UI is a React-based Web App available in the `SearchUI` folder. Navigate to [**SearchUI/README.md**](search-ui/README.md) for more details on the web app. 
+>>>>>>> 4455a6a6f3acb3368420e2b7e6c207e044ff1010
 
 
 
