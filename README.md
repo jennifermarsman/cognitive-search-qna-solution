@@ -78,16 +78,10 @@ ___
 As part of the ARM template, a UI is deployed to `https://{prefix}-ui-{randomString}.azurewebsites.net` similar to the screenshot below. Keep in mind it will take a few minutes for the documents to become available in the search index after adding them to storage. 
 
 ![Screenshot of sample web app](./images/search-results.png)
-<<<<<<< HEAD
-At this point, you should consider [adding authentication to the web app in the Azure portal](https://docs.microsoft.com/en-us/azure/app-service/scenario-secure-app-authentication-app-service) to secure your data.
-
-The UI is a React based Web App available in the `SearchUI` folder. Navigate to [**SearchUI/README.md**](search-ui/README.md) for more details on the web app. 
-=======
 
 At this point, you should consider [adding authentication to the web app in the Azure portal](https://docs.microsoft.com/en-us/azure/app-service/scenario-secure-app-authentication-app-service) to secure your data.
 
-The UI is a React-based Web App available in the `SearchUI` folder. Navigate to [**SearchUI/README.md**](search-ui/README.md) for more details on the web app. 
->>>>>>> 4455a6a6f3acb3368420e2b7e6c207e044ff1010
+The UI is a React-based Web App available in the `SearchUI` folder. Navigate to [**SearchUI/README.md**](SearchUI/README.md) for more details on the web app. 
 
 
 
